@@ -142,4 +142,4 @@ with torch.no_grad():
 select = np.argmax(prediction.detach().cpu().numpy())
 recommended = loaded_binary_encoder.inverse_transform(new_input_df)['선택한 방법'][select]
 # 예측 결과 출력
-st.subheader('모델 예측 결과: {recommended}')
+st.subheader('모델 예측 결과: '+recommended)
