@@ -2,13 +2,11 @@ import streamlit as st
 import torch
 import torch.nn as nn
 import pandas as pd
-
+from sklearn.preprocessing import StandardScaler
 import pickle
+import numpy as np
 
-with open('binary_encoder.pkl', 'wb') as f:
-    pickle.dump(binary_encoder, f)
-with open('standard_scaler.pkl', 'wb') as f:
-    pickle.dump(scaler, f)
+device = 'cpu'
 
 with open('binary_encoder.pkl', 'rb') as f:
     loaded_binary_encoder = pickle.load(f)
@@ -16,6 +14,71 @@ with open('standard_scaler.pkl', 'rb') as f:
     loaded_scaler = pickle.load(f)
 
 # 전체 모델 불러오기
+class ResidualBlock(nn.Module):
+    def __init__(self, in_channels, out_channels, stride=1):
+        super(ResidualBlock, self).__init__()
+        
+        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False)
+        self.bn1 = nn.BatchNorm2d(out_channels)
+        self.relu = nn.ReLU(inplace=True)
+        self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False)
+        self.bn2 = nn.BatchNorm2d(out_channels)
+        
+        # shortcut 연결을 위한 조건
+        self.shortcut = nn.Sequential()
+        if stride != 1 or in_channels != out_channels:
+            self.shortcut = nn.Sequential(
+                nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=stride, bias=False),
+                nn.BatchNorm2d(out_channels)
+            )
+        
+    def forward(self, x):
+        residual = x
+        
+        out = self.conv1(x)
+        out = self.bn1(out)
+        out = self.relu(out)
+        
+        out = self.conv2(out)
+        out = self.bn2(out)
+        
+        out += self.shortcut(residual)  # shortcut 연결
+        
+        out = self.relu(out)
+        return out
+
+class AngerResNet(nn.Module):
+    def __init__(self, input_size, hidden_size, output_size, dropout_rate=0.5):
+        super(AngerResNet, self).__init__()
+        
+        self.conv1 = nn.Conv2d(input_size, hidden_size, kernel_size=3, stride=1, padding=1, bias=False)
+        self.bn1 = nn.BatchNorm2d(hidden_size)
+        self.relu = nn.ReLU(inplace=True)
+        self.residual_block1 = ResidualBlock(hidden_size, hidden_size)
+        self.residual_block2 = ResidualBlock(hidden_size, hidden_size)
+        self.residual_block3 = ResidualBlock(hidden_size, hidden_size)
+        self.avg_pool = nn.AdaptiveAvgPool2d((1, 1))
+        self.fc = nn.Linear(hidden_size, output_size)
+
+    def forward(self, x):
+        if len(x.shape) == 1:
+          x = x.unsqueeze(0)
+        x = x.unsqueeze(-1).unsqueeze(-1)
+        x = x.permute(0, 1, 2, 3).repeat(1, 1, 10, 10)
+
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.relu(x)
+
+        x = self.residual_block1(x)
+        x = self.residual_block2(x)
+        x = self.residual_block3(x)
+
+        x = self.avg_pool(x)
+        x = x.view(x.size(0), -1)
+        x = self.fc(x)
+        return x
+    
 loaded_model = torch.load('anger_model.pth').to(device)
 loaded_model.eval()
 
