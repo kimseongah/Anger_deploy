@@ -83,15 +83,15 @@ loaded_model = torch.load('anger_model.pth').to(device)
 loaded_model.eval()
 
 # Streamlit 앱 시작
-st.title('Anger Prediction App')
+st.title('분노 관리 방법 추천')
 
 # 사용자 입력 받기
-name = st.text_input('이름:')
-prior_state = st.slider('사건 이전 상태:', min_value=0.0, max_value=10.0, value=5.0, step=0.1)
-intensity = st.slider('분노 수준 - 강도:', min_value=0.0, max_value=10.0, value=5.0, step=0.1)
-duration = st.slider('분노 수준 - 지속 기간 (분):', min_value=0, max_value=60, value=30, step=1)
-expression_method = st.checkbox('표현 방식:')
-total_anger_index = st.number_input('총합 분노 지표:', min_value=0, value=20)
+name = st.radio('이름: ', ['김성아', '오수진', '장효민', '전동근', '정두용'])
+prior_state = st.slider('사건 이전 상태:', min_value=0.0, max_value=10.0, value=5.0, step=1)
+intensity = st.slider('분노 수준 - 강도:', min_value=0.0, max_value=10.0, value=5.0, step=1)
+duration = st.number_input('분노 수준 - 지속 기간 (분):', min_value=0, max_value=120, value=60, step=5)
+expression_method = st.radio('표현 방식:', ['억제', '표출', '통제'])
+total_anger_index = st.slider('총합 분노 지표:', min_value=0, max_value=10.0, value=5.0, step=1)
 
 # 모델 입력을 위한 데이터 프레임 생성
 
@@ -143,4 +143,4 @@ select = np.argmax(prediction.detach().cpu().numpy())
 recommended = loaded_binary_encoder.inverse_transform(new_input_df)['선택한 방법'][select]
 # 예측 결과 출력
 st.subheader('모델 예측 결과:')
-st.write(f'예측 분노 척도: {recommended}')
+st.write(f'추천 분노 관리 방법: {recommended}')
