@@ -86,12 +86,12 @@ loaded_model.eval()
 st.title('분노 관리 방법 추천')
 
 # 사용자 입력 받기
-name = st.radio('이름: ', ['김성아', '오수진', '장효민', '전동근', '정두용'])
-prior_state = st.slider('사건 이전 상태:', min_value=0.0, max_value=10.0, value=5.0, step=1)
-intensity = st.slider('분노 수준 - 강도:', min_value=0.0, max_value=10.0, value=5.0, step=1)
+name = st.selectbox('이름: ', ['김성아', '오수진', '장효민', '전동근', '정두용'])
+prior_state = st.slider('사건 이전 상태:', min_value=0, max_value=10, value=5, step=1)
+intensity = st.slider('분노 수준 - 강도:', min_value=0, max_value=10, value=5, step=1)
 duration = st.number_input('분노 수준 - 지속 기간 (분):', min_value=0, max_value=120, value=60, step=5)
-expression_method = st.radio('표현 방식:', ['억제', '표출', '통제'])
-total_anger_index = st.slider('총합 분노 지표:', min_value=0, max_value=10.0, value=5.0, step=1)
+expression_method = st.selectbox('표현 방식:', ['억제', '표출', '통제'])
+total_anger_index = st.slider('총합 분노 지표:', min_value=0, max_value=10, value=5, step=1)
 
 # 모델 입력을 위한 데이터 프레임 생성
 
